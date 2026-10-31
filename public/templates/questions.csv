@@ -1,0 +1,2 @@
+id,subject,topic,question,choice1,choice2,choice3,choice4,answer,explanation,difficulty,year,session,type,sourceUrl,verificationStatus,reviewNote,version,rights
+LOCAL-W-001,수질오염개론,오염부하량,"유량 1000 m³/일, 농도 20 mg/L인 하천의 물질 부하량(kg/일)은? 결과는 소수 셋째 자리까지 반올림한다.",20 kg/일,30 kg/일,40 kg/일,10 kg/일,1,"1 m³=1,000 L, 1 kg=1,000,000 mg. 부하량=Q×C/1,000=1000×20/1,000. 따라서 20 kg/일이다. 보기 단위는 모두 동일하다.",중,,,original,https://github.com/YunSangYeong/Engineer-Water-Environmental-Pollution-Control-CBT,pending,출처·이용 조건·정답 검토 후 승인하세요.,main,자체 제작 자료 CC BY 4.0 · 수질환경기사 CBT contributors 표시 · 변경 표시

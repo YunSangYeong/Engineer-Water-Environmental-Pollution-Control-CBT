@@ -1,15 +1,19 @@
 import { describe, it, expect } from 'vitest';
 import { BASE_BANK, SUBJECTS, createExam, grade, emptyStore, submitExam, answerExam, remainingSeconds, validateQuestion, fingerprint, importQuestions, parseCsv, restoreStore, startPractice, checkPractice, nextPractice } from '../src/model';
 import { readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 
 describe('은행 구조·권리·중복·등록 수', () => {
- it('220개 자체 제작, 과목 50/50/50/50/20, 미확인 출제 회차 없음', () => {
-  expect(BASE_BANK).toHaveLength(220);
-  expect(SUBJECTS.map(s => BASE_BANK.filter(q=>q.subject===s).length)).toEqual([50,50,50,50,20]);
-  expect(new Set(BASE_BANK.map(q=>q.id)).size).toBe(220);
-  expect(new Set(BASE_BANK.map(fingerprint)).size).toBe(220);
+ it('기존 220문항의 ID·내용·순서·정답·메타데이터 보존',()=>{
+ expect(createHash('sha256').update(JSON.stringify(BASE_BANK.slice(0,220))).digest('hex')).toBe(readFileSync('tests/legacy-bank.sha256','utf8').trim());
+ });
+ it('1000개 자체 제작, 과목 260/260/230/230/20, 미확인 출제 회차 없음', () => {
+  expect(BASE_BANK).toHaveLength(1000);
+  expect(SUBJECTS.map(s => BASE_BANK.filter(q=>q.subject===s).length)).toEqual([260,260,230,230,20]);
+  expect(new Set(BASE_BANK.map(q=>q.id)).size).toBe(1000);
+  expect(new Set(BASE_BANK.map(fingerprint)).size).toBe(1000);
   for(const q of BASE_BANK) { expect(validateQuestion(q)).toEqual(q); expect(q.year).toBeNull();expect(q.session).toBeNull();expect(q.type).toBe('original'); }
-  expect(new Set(BASE_BANK.filter(q=>q.family).map(q=>q.family)).size).toBe(20);
+  expect(new Set(BASE_BANK.filter(q=>q.family).map(q=>q.family)).size).toBe(46);
  });
  it('보기 순서를 바꾼 중복도 제외, 잘못된 입력은 원자적으로 거부',()=>{
   expect(importQuestions([{...BASE_BANK[0],id:'DIFFERENT', choices:[...BASE_BANK[0].choices].reverse()}],BASE_BANK).duplicates).toBe(1);
@@ -47,6 +51,32 @@ for(const q of BASE_BANK.filter(q=>q.calculation)) {
    case 'recovery':near(v[0]+r*v[1]/100,v[2],v[1]/100);break;
    case 'bod':near(r*v[2]+v[1],v[0],v[2]);break;
    case 'gravimetric':near(r*v[2]/1e6+v[0],v[1],v[2]/1e6);break;
+   case 'ph':expect(Math.abs(10**(-r)/v[0]-1)).toBeLessThan(.00116);break;
+   case 'poh':near(r+v[0],14);break;
+   case 'first-order':near(Math.log(v[0]/r),v[1]*v[2],2/v[0]*Math.exp(v[1]*v[2]));break;
+   case 'diluent':near((v[0]+r)*v[2],v[0]*v[1],v[2]);break;
+   case 'alkalinity':near(r*50,v[0],50);break;
+   case 'hardness':near((r-2.5*v[0])/4.1,v[1],1/4.1);break;
+   case 'oxygen-deficit':near(r+v[1],v[0]);break;
+   case 'diameter':near(Math.PI*r*r/4*v[1],v[0],Math.PI*(r+.001)*v[1]/2);break;
+   case 'manning':near((r*v[0])**3,v[1]**2*v[2]**1.5,3*(r+.001)**2*v[0]**3);break;
+   case 'pump':near(r*1000*v[2],1000*9.81*v[0]*v[1],1000*v[2]);break;
+   case 'population':near((r/v[0])**(1/v[2])-1,v[1],2/v[0]);break;
+   case 'sewage':near(r/v[0],v[1],1/v[0]);break;
+   case 'supply-days':near(r*v[1],v[0],v[1]);break;
+   case 'water-loss':near((1-r/100)*v[0],v[1],v[0]/100);break;
+   case 'removed-load':near(r*1000/v[0]+v[2],v[1],1000/v[0]);break;
+   case 'filter-area':near(r*v[1]*24,v[0],v[1]*24);break;
+   case 'dry-solids':near(r/v[0],v[1],1/v[0]);break;
+   case 'oxygen-demand':near(r/v[0],v[1],1/v[0]);break;
+   case 'recycle':near((1+r)*v[0],r*v[1],v[1]-v[0]);break;
+   case 'reaction-time':near(Math.exp(-v[2]*r)*v[0],v[1],v[1]*v[2]*1.01);break;
+   case 'titration':near(r*v[2]/50000,v[0]*v[1],v[2]/50000);break;
+   case 'rpd':near(r*(v[0]+v[1])/200,Math.abs(v[0]-v[1]),(v[0]+v[1])/200);break;
+   case 'sample-mean':near(r*3-v[0]-v[1],v[2],3);break;
+   case 'sample-sd':near(r*r,((v[0]-v[1])**2+(v[0]-v[2])**2+(v[1]-v[2])**2)/6,2*(r+.001));break;
+   case 'blank-calibration':near(r*v[2]+v[1],v[0],v[2]);break;
+   case 'do-percent':near(r*v[1]/100,v[0],v[1]/100);break;
    default:throw new Error('미검증 계산 유형');
   }
   const nums=q.choices.map(c=>Number(c.split(' ')[0]));

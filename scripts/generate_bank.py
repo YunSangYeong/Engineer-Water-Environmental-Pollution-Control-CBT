@@ -1,5 +1,5 @@
 """Deterministic authored practice material; not past examination questions.
-20 numeric families × 10 conditions + 20 conceptual originals = 220.
+20 numeric families × 10 + 26 numeric families × 30 + 20 concepts = 1000.
 AI general knowledge, no external source was successfully read.
 """
 import json,csv
@@ -83,6 +83,9 @@ concepts=[
 for j,(topic,stem,right,a,b,c,explain) in enumerate(concepts):
  choices=[right,a,b,c];offset=j%4;choices=choices[offset:]+choices[:offset]
  add(4,topic,stem,explain+' 이 문항은 일반 관리 원칙 연습이며 특정 현행 조항·수치의 확인을 뜻하지 않는다.',choices,choices.index(right)+1)
+from expanded_bank import expand
+expand(numeric)
+assert len(BANK) == 1000
 (ROOT/'src/data/questions.json').write_text(json.dumps(BANK,ensure_ascii=False,indent=2)+'\n')
 # Import templates are examples, always pending on import.
 q={**BANK[0],'id':'LOCAL-W-001','verificationStatus':'pending','reviewNote':'출처·이용 조건·정답 검토 후 승인하세요.'}
@@ -90,4 +93,4 @@ q={**BANK[0],'id':'LOCAL-W-001','verificationStatus':'pending','reviewNote':'출
 cols=['id','subject','topic','question','choice1','choice2','choice3','choice4','answer','explanation','difficulty','year','session','type','sourceUrl','verificationStatus','reviewNote','version','rights']
 with (ROOT/'public/templates/questions.csv').open('w') as f:
  w=csv.DictWriter(f,fieldnames=cols,lineterminator="\n");w.writeheader();row={k:q.get(k) for k in cols};row.update({f'choice{i+1}':v for i,v in enumerate(q['choices'])});w.writerow(row)
-print('Generated',len(BANK),'questions; numeric 200 (20 families × 10), conceptual 20; shortfall',1000-len(BANK))
+print('Generated',len(BANK),'questions; numeric 980 (20 families × 10 + 26 families × 30), conceptual 20; shortfall',1000-len(BANK))
